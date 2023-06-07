@@ -1,0 +1,14 @@
+.avatar{
+    background-color: gray;
+}
+
+.item{
+    width: 120px;
+    /* text-align: center; */
+    cursor: pointer;
+    justify-content: center !important;
+}
+
+.item:hover{
+    color: #1677ff;
+}

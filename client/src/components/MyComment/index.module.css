@@ -1,0 +1,36 @@
+.paginationContainer{
+    /* outline:1px solid; */
+    text-align:center;
+    margin: 40px 0;
+}
+
+.avatar,.nologin{
+   position: absolute;
+  left: -50px;
+  top: 0;
+}
+
+.nologin{
+    top: 5px;
+    left: -40px;
+}
+
+.container{
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.box{
+    display: flex ;
+    width: 100%;
+    padding: 15px 5px;
+}
+
+.right{
+    margin-right: 20px;
+}
+
+.time{
+    color: #ccc;
+    font-size: 14px;
+}
