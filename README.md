@@ -120,17 +120,6 @@ mongorestore -h dbhost -d dbname --dir dbdirectory
 
 
 
-3. **数据接口**：*https://yapi.duyiedu.com/project/387/interface/api*
-
-
-
-4. **本次项目讲解约定**
-   - 这一次项目不会像个人博客，把所有的功能就讲解，只会讲解核心的功能，重复的代码模块大家自己完成
-   - 上课的时候不会带着写 *CSS*，涉及到 *CSS* 的时候会直接使用成品里面的 *CSS* 
-   - 关于 *JSX* 部分，只会挑一些重要的来讲的，有一些 *JSX* 会直接从成品里面拿过来
-
-
-
 ## 项目笔记
 
 1. 有关 *CSS*
@@ -153,9 +142,9 @@ import { UserOutlined } from "@ant-design/icons";
 
 3. 请求转发
 
-在 *src* 目录下面新建一个 *setupProxy* 的文件，在该文件中进行请求转发的配置
+   1.简单配置代理，直接在package.json配置文件中添加proxy属性，值就为你要代理的目标服务器地址。
 
-在使用的时候，还需要安装一个插件 *http-proxy-middleware*，配置示例如下：
+   2.在 *src* 目录下面新建一个 *setupProxy* 的文件，在该文件中进行请求转发的配置在使用的时候，还需要安装一个插件 *http-proxy-middleware*，配置示例如下：
 
 ```js
 const { createProxyMiddleware } = require("http-proxy-middleware");
@@ -188,88 +177,61 @@ module.exports = function(app){
 
 
 
-5. 如何修改打包后的目录
-
-由于我们的静态资源以 *static*，所以我们配置了请求转发，但是 *create-react-app*（基于 *webpack*）默认在打包应用的时候，也会将打包好的资源放置到 *static* 目录下，导致在加载打包好后的资源时，也会进行请求转发，从而报错。
-
-我们需要做的是修改打包好后的目录。首先运行下面的命令：
-
-```js
-npm run eject
-```
-
-> 注意：弹射的时候要求 *git* 仓库不能有未提交的文件
-
-弹射出来后，会多出来很多隐藏文件，我们就可以修改对应的配置，但是会有一个关于 *Babel* 的错误，最快的解决方案就是在 *package.json* 中删除如下的配置：
-
-```js
-"eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-},
-```
-
-接下来，在弹射出来的配置文件中，我们就可以修改 *webpack* 的打包配置：
-
-*config/webpack.config.js* 的 *output* 对应的配置
-
-```js
- filename: isEnvProduction
-        ? 'assets/js/[name].[contenthash:8].js'
-        : isEnvDevelopment && 'assets/js/bundle.js',
-      // There are also additional JS chunk files if you use code splitting.
-      chunkFilename: isEnvProduction
-        ? 'assets/js/[name].[contenthash:8].chunk.js'
-        : isEnvDevelopment && 'assets/js/[name].chunk.js',
-      assetModuleFilename: 'assets/media/[name].[hash][ext]',
-```
-
-
-
-6. 关于 *redux* 中将异步获取到的数据填充到状态仓库
+5. 关于 *redux* 中将异步获取到的数据填充到状态仓库
 
 之前我们介绍了一种方式，是通过 *action* 来派发一个 *reducer* 从而实现状态填充。例如之前所写学生管理系统：
 
 ```js
-export const getStuListAsync = createAsyncThunk(
-  "stu/getStuListAsync",
-  async (_, thunkApi) => {
-    // 发送 ajax 请求
-    const response = await getStuListApi();
-    // 派发 action
-    thunkApi.dispatch(initStuList(response.data));
-  }
-);
+export const updateUserInfoAsync =   createAsyncThunk('user/updateUserInfo',
+    async (payload,thunkAPi) =>{
+        // console.log(payload,'数据');
+  			//发送ajax请求
+        await updateUserInfo(payload.userId,payload.newUserInfo);
+       	const {data} = await userInfoById(payload.userId)
+       	//派发更新
+        thunkAPi.dispatch(updateUser(data))
+    }
+)
 ```
 
 也可以使用 *redux-toolkit* 官网所示例的方式：
 
 ```js
-export const getTypeList = createAsyncThunk(
-    "type/getTypeList",
-    async ()=>{
-        const response = await getType();
-        // 填充返回的数据到状态仓库
-        return response.data;
+
+export const fetchTypeList = createAsyncThunk('type/fetchTypeList',
+    async (_,thunkApi) =>{
+        // console.log("_>>>>>",_); //dispatch触发调用传入的参数
+        // console.log('thunkApi>>>',thunkApi);   //当前切片对象，里头有dispatch方法
+        const {data} = await getType();
+        //方法一配合dispatch，reducer使用
+        // thunkApi.dispatch(setTypeList(data))  
+        //方法二
+  			// 填充返回的数据到状态仓库
+        return data;
     }
-);
+)
 
 // ....
 
-// 专门处理异步的 reducer
-extraReducers : {
-  // 这里就会有三种状态
-  [getTypeList.fulfilled] : (state, { payload }) => {
-    state.typeList = payload;
-  }
-}
+		// 专门处理异步的 reducer
+		//方法一，即将弃用
+    // extraReducers:{
+    //     [fetchTypeList.fulfilled](state,{payload}){
+    //         state.typeList = payload;
+    //     }
+    // },
+    //方法二，builder对象调用action
+    extraReducers(builder){
+        builder.addCase(fetchTypeList.fulfilled,(state,{payload})=>{
+            state.typeList = payload;
+        })
+    }
+
 ```
 
 
 
-7. 关于使用自定义图标字体
+6. 关于使用自定义图标字体
 
 首先可以在 *iconfont* 上面下载你喜欢的图标字体：*https://www.iconfont.cn/*
 
@@ -293,11 +255,7 @@ extraReducers : {
 
 
 
-8. 在 *React* 中，如果想要设置多个类名样式，可以借助一个第三方的库，叫做 classnames，官方地址：*https://www.npmjs.com/package/classnames*
-
-
-
-9. 关于 *markdown* 的编辑器
+7. 关于 *markdown* 的编辑器
 
 我们在项目中会频繁的使用到 *markdown* 的编辑器，我们使用的是 *toast-ui edior*，官网地址：*https://ui.toast.com/tui-editor/*
 
@@ -320,7 +278,7 @@ npm install --save @toast-ui/react-editor --force
 
 
 
-10. 关于使用 *toast-ui markdown editor* 时生成 *source map* 文件失败
+8. 关于使用 *toast-ui markdown editor* 时生成 *source map* 文件失败
 
 <img src="https://xiejie-typora.oss-cn-chengdu.aliyuncs.com/2022-11-11-120547.png" alt="image-20221111200546585" style="zoom:50%;" />
 
@@ -334,7 +292,7 @@ npm install --save @toast-ui/react-editor --force
 
 
 
-11. Cross-Origin Read Blocking (CORB) 已屏蔽 MIME 类型为 text/html 的跨域响应
+9. Cross-Origin Read Blocking (CORB) 已屏蔽 MIME 类型为 text/html 的跨域响应
 
 ![image-20221112105645409](https://xiejie-typora.oss-cn-chengdu.aliyuncs.com/2022-11-12-025645.png)
 
@@ -356,27 +314,5 @@ npm install --save @toast-ui/react-editor --force
 
 
 
-## 项目总结
 
-- 没有什么比做一个实际项目让你对某一个技术更有信心（技术是否能够落地）
-- 项目由于时间关系，里面可能会存在没有发现的 bug
-  - 同学们尝试自己解决一下，然后反馈给我
-  - 如果解决不了，直接反馈给我，我这边来处理
-- 如果要将项目写入到自己简历里面，可以参阅下面的方式
-  - 项目的描述
-    - 项目本身的描述（我这是一个什么样的项目，项目提供了哪些功能，项目分为几个模块，每个模块大致是做什么的）
-    - 采用的技术的描述（整个项目用到了什么技术栈，前端是什么技术栈，后端是什么技术栈）
-  - 你自己在项目中的职责（你在这次项目中负责做了什么）
-    - 负责还原 UI 设计师的设计稿
-    - 负责使用 *Create-React-App* 搭建前台项目整体框架
-    - 负责 xxx 模块的开发
-    - ....
-
-示例1:
-
-![image-20221116113057984](https://xiejie-typora.oss-cn-chengdu.aliyuncs.com/2022-11-16-033058.png)
-
-示例2:
-
-![image-20221116113141125](https://xiejie-typora.oss-cn-chengdu.aliyuncs.com/2022-11-16-033141.png)
 

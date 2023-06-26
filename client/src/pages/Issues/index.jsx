@@ -18,7 +18,7 @@ function Issues(props) {
 
     const [pagesInfo,setPagesInfo] = useState({
         current,   //当前页
-        pageSize: 15,  //一页显示多少条数据
+        pageSize: 10,  //一页显示多少条数据
         total:0    //数据总数
     })
 
